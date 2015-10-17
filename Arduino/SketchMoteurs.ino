@@ -1,7 +1,6 @@
 #include <AccelStepper.h>                   //importing the AccelStepper library
 
-const float angularStep = 0.9;
-const unsigned short int stepsPerRevolution = 360/angularStep;
+// const float angularStep = 0.9;
 const unsigned short int resolutionX = 80;                       // must be an integer
 const unsigned short int resolutionY = 80;
 
@@ -25,9 +24,9 @@ void loop(){
 
   for(int yi = 1; yi <= resolutionY; yi++) {
     //read IR sensor
-
+    short int direction = pow(-1, yi % 2);
     for(int xi = 1; xi <= resolutionX; xi++){
-      Xaxis.moveTo(Xaxis.currentPosition() - pow(-1, yi % 2)); //X line movement
+      Xaxis.moveTo(Xaxis.currentPosition() - direction); //X line movement
       Xaxis.runToPosition();
 
       //read IR sensor
