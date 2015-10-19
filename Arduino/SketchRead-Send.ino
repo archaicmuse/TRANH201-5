@@ -10,6 +10,6 @@ void loop() {
   unsigned int sensorValue = analogRead(analogPin); //extreme values can be modified https://www.arduino.cc/en/Reference/AnalogReference
   Serial.write(sensorValue);                        //single-byte data sent by USB
 
-  delay(300);                                       //300ms of delay for additional stability
+  delay(30);                                       //30ms of delay for additional stability
 
 }
