@@ -35,11 +35,11 @@ void loop(){
   myDATA = SD.open("data.txt", FILE_WRITE); 
   dataManagement(resolutionX);
   
-  for(byte yi = 1; yi < resolutionY; yi++) {
+  for(byte yi = 1; yi =< resolutionY; yi++) {
     dataManagement((int)analogRead(analogPin));  
 
     short int direction = pow(-1, yi % 2);
-    for(byte xi = 1; xi < resolutionX; xi++){
+    for(byte xi = 1; xi =< resolutionX; xi++){
       Xaxis.move(-1*direction);
       Xaxis.runToPosition();
       dataManagement((int)analogRead(analogPin));
