@@ -47,6 +47,7 @@ void loop(){
     Yaxis.move(-1);
     Yaxis.runToPosition();
   }
+  myFile.close();
   stepsDisplacement(0,0);
   delay(3600000);
 }
