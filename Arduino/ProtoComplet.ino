@@ -6,7 +6,7 @@ File myDATA;
 byte resolutionX = 80;
 byte resolutionY = 80;
 const int analogPin = A0;
-AccelStepper Xaxis(1, 3, 6);                 //steppers initialization (type, step pin, direction pin)
+AccelStepper Xaxis(1, 3, 6);
 AccelStepper Yaxis(1, 4, 7);
 
 
