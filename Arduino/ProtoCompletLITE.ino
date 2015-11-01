@@ -21,13 +21,17 @@ void stepsDisplacement(byte x, byte y){
 
 void loop(){
   stepsDisplacement((byte)(-0.5)*resolutionX, (byte)0.5*resolutionY);
-  Serial.write(resolutionX);
+  byte xi = 0;
   for(byte yi = 0; yi < resolutionY; yi++) {
+    Serial.write(xi);
+    Serial.write(yi);
     Serial.write((int)analogRead(analogPin));  
     short int direction = pow(-1, yi % 2);
-    for(byte xi = 0; xi < resolutionX; xi++){
+    for(xi; xi < resolutionX; xi++){
       Xaxis.move(direction);
       Xaxis.runToPosition();
+      Serial.write(xi);
+      Serial.write(yi);
       Serial.write((int)analogRead(analogPin));
     }
     Yaxis.move(-1);
