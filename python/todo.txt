@@ -1,7 +1,0 @@
-- ini file reader
-- matplotlib to show thermal image
-- implement save image function
-- implement show image function
-- a working progress bar
-- countdown timer!
-- handle float tempretaure
