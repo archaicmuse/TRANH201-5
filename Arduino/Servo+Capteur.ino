@@ -4,8 +4,8 @@
 
 byte resolutionX = 80;
 byte resolutionY = 80;
-Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 Servo servoX;
 Servo servoY;
 
