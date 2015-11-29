@@ -6,3 +6,6 @@ The script will only work if you have those packages installed
  - `python3-serial`
  - GTK3+
 
+### Arduino libraries
+To compile the Arduino sketch you will have to install those libraries
+ - `Adafruit-MLX90614` 
