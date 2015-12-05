@@ -10,7 +10,6 @@ from time import sleep, strftime, gmtime
 import webbrowser
 from pylab import get_cmap
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import ImageGrid,make_axes_locatable
 import numpy as np
 
 require_version('Gtk', '3.0')
