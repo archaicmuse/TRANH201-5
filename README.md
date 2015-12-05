@@ -2,6 +2,8 @@
 ### Python dependecies
 The script will only work if you have those packages installed 
  - `python3-serial`
+ - `python3-matplotlib`
+ - `python3-numpy`
  - GTK3+
 
 ### Arduino libraries
