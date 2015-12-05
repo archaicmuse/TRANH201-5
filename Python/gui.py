@@ -6,8 +6,13 @@ from configparser import ConfigParser
 from time import sleep
 import serial.tools.list_ports
 import serial
-from time import sleep, strftime
+from time import sleep, strftime, gmtime
 import webbrowser
+from pylab import get_cmap
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid,make_axes_locatable
+import numpy as np
+
 require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 try:
@@ -23,10 +28,12 @@ absolute_path = path.split(path.abspath(__file__))[0] + "/"
 database_folder = absolute_path + cnfg.get("database","folder")
 gallery_folder = absolute_path + cnfg.get("gallery","folder")
 db_ext = "." + cnfg.get("database","extension")
-date_format = cnfg.get("gallery","date_format")
+date_format = "%d-%m-%Y_%H-%M-%S"
 auto_create_gallery = bool(cnfg.get("gallery","auto_create_gallery"))
 baud_rate = int(cnfg.get("arduino","baud_rate"))
 timeout = float(cnfg.get("arduino","timeout"))
+xpixel = int(cnfg.get("arduino","xpixel"))
+ypixel = int(cnfg.get("arduino","ypixel"))
 
 def open_folder(folder):
     """
@@ -49,14 +56,13 @@ class GUI(Gtk.Window):
         self.set_title("Camera thermique GUI")
         self.set_default_size(300,150)
         self.resize(300,150)
-        self.set_icon_from_file('logo.jpeg')
+        self.set_icon_from_file('./images/logo.jpeg')
         self.set_border_width(10)
         self.set_resizable(False)
         self.set_position(Gtk.WindowPosition.CENTER)
         vbox = Gtk.VBox(spacing=10)
         hbox1 = Gtk.HBox(spacing=10)
         hbox2 = Gtk.HBox(spacing=50)
-        hbox3 = Gtk.HBox(spacing=50)
         # Actions Handler
         mb = Gtk.MenuBar()
         filemenu = Gtk.Menu()
@@ -70,10 +76,13 @@ class GUI(Gtk.Window):
         open_gallery.connect("activate", self.open_gallery)
         open_database = Gtk.MenuItem("Open Database Folder")
         open_database.connect("activate", self.open_database)
+        open_db_file = Gtk.MenuItem("Open a database file")
+        open_db_file.connect("activate", self.open_db_file)
         exit = Gtk.MenuItem("Exit")
         exit.connect("activate", Gtk.main_quit)
         filemenu.append(open_gallery)
         filemenu.append(open_database)
+        filemenu.append(open_db_file)
         filemenu.append(exit)
 
         open_blog = Gtk.MenuItem("Our Blog")
@@ -106,7 +115,7 @@ class GUI(Gtk.Window):
         #Refresh button Handler
         self.eventbox = Gtk.EventBox()
         self.refresh_button = Gtk.Image()
-        self.refresh_button.set_from_file("refresh.png")
+        self.refresh_button.set_from_file("./images/refresh.png")
         self.eventbox.add(self.refresh_button)
         self.eventbox.connect("button-press-event", self.refresh_ports)
         hbox1.pack_start(self.eventbox, True, True, 0)
@@ -129,20 +138,10 @@ class GUI(Gtk.Window):
         hbox2.pack_start(self.start_button, False, False, 0)
         hbox2.pack_start(self.progressbar, False, False, 0)
         #Save & show image
-        self.save_image = Gtk.Button.new_with_mnemonic("Save Image")
-        self.save_image.connect("clicked", self.save_image_clicked)
-        self.save_image.set_no_show_all(True)
-        self.show_image = Gtk.Button.new_with_mnemonic("Show Image")
-        self.show_image.connect("clicked", self.show_image_clicked)
-        self.show_image.set_no_show_all(True)
-        hbox3.pack_start(self.show_image, False, False, 0)
-        hbox3.pack_start(self.save_image, False, False, 0)
-
         vbox.pack_start(mb, False, False ,0)
         vbox.pack_start(hbox1, False, False, 0)
         vbox.pack_start(self.label, False, False, 0 )
         vbox.pack_start(hbox2, False, False, 0)
-        vbox.pack_start(hbox3, False, False, 0)
         self.add(vbox)
 
     def on_port_changed(self, combo):
@@ -203,8 +202,6 @@ class GUI(Gtk.Window):
             self.ports_combo.set_sensitive(True)
             self.progressbar.hide()
             self.start_button.hide()
-            self.save_image.hide()
-            self.show_image.hide()
             self.connect_button.set_label("Connect")
             self.connect_button.connect("clicked", self.on_connect_clicked)
 
@@ -212,20 +209,43 @@ class GUI(Gtk.Window):
         """"
             Start capturing the thermal image
         """
+        global date_format, extension
         self.start_button.set_sensitive(False)
         self.connect_button.set_sensitive(False)
         self.progressbar.show()
         i = 0
         new_value = 0
-        while i < 6400:
-            self.progressbar.set_fraction(float(new_value))
-            new_value += 0.015625
-            i+=1
+        filename = database_folder + strftime(date_format,gmtime()) + db_ext
+        f = open(filename ,'w')
+        for i in range(ypixel):
+            for j in range(xpixel):
+                temperature = self.arduino.readline()
+                f.write(str(temperature))
+                if j != xpixel:
+                    f.write(",")
+                self.progressbar.set_fraction(float(new_value))
+                new_value += 0.015625
+            if i != ypixel:
+                f.write("\n")
+        f.close()
         self.progressbar.set_text("100%")
         self.start_button.set_sensitive(True)
-        self.save_image.show()
         self.connect_button.set_sensitive(True)
-        self.show_image.show()
+        self.show_thermal_image(filename)
+
+    def open_db_file(self, widget):
+        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        filter = Gtk.FileFilter()
+        filter.set_name("Database file")
+        filter.add_pattern("*.csv")
+        dialog.add_filter(filter)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            self.show_thermal_image(dialog.get_filename())
+        dialog.destroy()
 
     def open_gallery(self, widget):
         """"
@@ -253,25 +273,16 @@ class GUI(Gtk.Window):
         """
         webbrowser.open("https://github.com/archaicmuse/TRANH201-5")
 
-    def show_image_clicked(self, button):
-        """
-
-        """
-        pass
-
-    def save_image_clicked(self, button):
-        pass
-
     def show_about(self, widget):
         """
             Show the about dialog
-        """
+            """
         dialog = Gtk.AboutDialog()
         dialog.set_transient_for(self)
         dialog.set_program_name("Thermal Camera GUI")
         dialog.set_website("https://tranh201groupe5.wordpress.com")
         dialog.set_website_label("Website")
-        logo = GdkPixbuf.Pixbuf.new_from_file("logo.jpeg")
+        logo = GdkPixbuf.Pixbuf.new_from_file("./images/logo.jpeg")
         dialog.set_logo(logo)
         dialog.set_name('Thermal Camera GUI')
         dialog.set_authors(['Bilal ELMOUSSAOUI',
@@ -282,10 +293,28 @@ class GUI(Gtk.Window):
                             'Ayoub AZAIZAOUI',
                             'Andrew RYAN'])
         dialog.set_comments(' Created by students of Ecole Polytechnique DE BRUXELLES.')
-        dialog.set_version("0.1 beta")
+        dialog.set_version("0.1 Beta")
         dialog.run()
         dialog.destroy()
 
+    def show_thermal_image(self, filename):
+        global db_ext,gallery_folder,xpixel,ypixel
+        f = open(filename)
+        lines = f.readlines()
+        f.close()
+        data=np.zeros((xpixel, ypixel))
+        for i in range(ypixel):
+            for j in range(xpixel):
+                data[i,j] = float(lines[i].split(",")[j])
+        plt.clf()
+        cmap = get_cmap('jet')
+        plt.imshow(data, interpolation="nearest", cmap=cmap)
+        plt.axis('off')
+        cb = plt.colorbar()
+        cb.set_label('Temp (in C)  ')
+        if not path.exists(gallery_folder + filename):
+            plt.savefig(gallery_folder + filename.replace(db_ext, ".png"))
+        plt.show()
 
 win = GUI()
 win.connect("delete-event", Gtk.main_quit)
