@@ -316,8 +316,8 @@ class GUI(Gtk.Window):
                 plt.axis('off')
                 cb = plt.colorbar()
                 cb.set_label('Temp (in C)  ')
-                if not path.exists(gallery_folder + filename):
-                    plt.savefig(gallery_folder + filename.replace(db_ext, ".png"))
+                if not path.exists(gallery_folder + "/" + path.basename(filename)):
+                    plt.savefig(gallery_folder + "/" + path.basename(filename).replace(db_ext, ".png"))
                 plt.show()
 
 win = GUI()
