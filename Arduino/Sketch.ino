@@ -22,15 +22,15 @@ void loop(){
     Serial.print(mlx.readObjectTempC());
     short int direction = pow(-1, yi%2);
     for(xi, xi < resolution; xi++){
-      servoX.write((byte)(-0.5)*resolutionX + direction);
+      servoX.write((byte)(-0.5)*resolutionX + direction + 90);
       delay(20);
       Serial.print(mlx.readObjectTempC());
     }
-    servoY.write((byte)0.5*resolutionY - yi);
+    servoY.write((byte)0.5*resolutionY - yi + 90);
     delay(20);
   }
-  servoX.write(0);
-  servoY.write(0);
+  servoX.write(90);
+  servoY.write(90);
   exit(0);
 }
 
