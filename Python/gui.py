@@ -3,7 +3,6 @@ from os import path, makedirs
 from platform import system
 from subprocess import Popen
 from configparser import ConfigParser
-from time import sleep
 import serial.tools.list_ports
 import serial
 from time import sleep, strftime, gmtime
@@ -163,8 +162,7 @@ class GUI(Gtk.Window):
                 self.ports.append([port[0]])
             self.ports_combo.set_model(self.ports)
             self.ports_combo.set_active(0)
-
-
+            
     def on_connect_clicked(self, button):
         """
             Connect button clicked event handler
@@ -243,9 +241,12 @@ class GUI(Gtk.Window):
         dialog.add_filter(filter)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            self.show_thermal_image(dialog.get_filename())
-        dialog.destroy()
-
+            filename = dialog.get_filename()
+            dialog.destroy()
+            self.show_thermal_image(filename)
+        else:
+            dialog.destroy()
+        
     def open_gallery(self, widget):
         """"
             Open the gallery folder using the default file manager
@@ -275,7 +276,7 @@ class GUI(Gtk.Window):
     def show_about(self, widget):
         """
             Show the about dialog
-            """
+        """
         dialog = Gtk.AboutDialog()
         dialog.set_transient_for(self)
         dialog.set_program_name("Thermal Camera GUI")
@@ -297,14 +298,15 @@ class GUI(Gtk.Window):
         dialog.destroy()
 
     def show_thermal_image(self, filename):
-        global db_ext,gallery_folder,xpixel,ypixel
+        global db_ext, gallery_folder, xpixel, ypixel
         f = open(filename)
         lines = f.readlines()
         f.close()
-        data=np.zeros((xpixel, ypixel))
+        data = np.zeros((xpixel, ypixel))
         for i in range(ypixel):
+            line = lines[i].strip().split(",")
             for j in range(xpixel):
-                data[i,j] = float(lines[i].split(",")[j])
+                data[i,j] = float(line[j])
         plt.clf()
         cmap = get_cmap('jet')
         plt.imshow(data, interpolation="nearest", cmap=cmap)
