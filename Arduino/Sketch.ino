@@ -18,7 +18,7 @@ void setup(){
 
 void loop(){
   byte xi = 0;
-  for(byte yi = 0; yi < resolution; yi++) {
+  for(byte yi = 0; yi < resolutionY; yi++) {
     Serial.print(mlx.readObjectTempC());
     short int direction = pow(-1, yi%2);
     for(xi, xi < resolution; xi++){
