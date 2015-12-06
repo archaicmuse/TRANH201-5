@@ -17,11 +17,10 @@ void setup(){
 }
 
 void loop(){
-  byte xi = 0;
   for(byte yi = 0; yi < resolutionY; yi++) {
     Serial.print(mlx.readObjectTempC());
     short int direction = -1*pow(-1, yi%2);
-    for(xi, xi < resolution; xi++){
+    for(byte xi = 0, xi < resolution; xi++){
       servoX.write((byte)(-0.5)*resolutionX*direction + direction*xi + 0.5*(direction - 1) + 90);
       delay(20);
       Serial.print(mlx.readObjectTempC());
