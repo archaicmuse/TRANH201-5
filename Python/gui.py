@@ -210,8 +210,7 @@ class GUI(Gtk.Window):
         self.start_button.set_sensitive(False)
         self.connect_button.set_sensitive(False)
         self.progressbar.show()
-        i = 0
-        new_value = 0
+        fraction = 0
         filename = database_folder + strftime(date_format,gmtime()) + db_ext
         f = open(filename ,'w')
         for i in range(ypixel):
@@ -220,8 +219,8 @@ class GUI(Gtk.Window):
                 f.write(str(temperature))
                 if j != xpixel:
                     f.write(",")
-                self.progressbar.set_fraction(float(new_value))
-                new_value += 0.015625
+                self.progressbar.set_fraction(float(fraction))
+                fraction += 0.015625
             if i != ypixel:
                 f.write("\n")
         f.close()
