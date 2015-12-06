@@ -206,12 +206,12 @@ class GUI(Gtk.Window):
         """"
             Start capturing the thermal image
         """
-        global date_format, extension
+        global date_format, extension, database_folder
         self.start_button.set_sensitive(False)
         self.connect_button.set_sensitive(False)
         self.progressbar.show()
         fraction = 0
-        filename = database_folder + strftime(date_format,gmtime()) + db_ext
+        filename = database_folder + "/" + strftime(date_format,gmtime()) + db_ext
         f = open(filename ,'w')
         for i in range(ypixel):
             for j in range(xpixel):
