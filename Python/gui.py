@@ -297,24 +297,28 @@ class GUI(Gtk.Window):
         dialog.destroy()
 
     def show_thermal_image(self, filename):
-        global db_ext, gallery_folder, xpixel, ypixel
+        global db_ext, gallery_folder
         f = open(filename)
         lines = f.readlines()
         f.close()
-        data = np.zeros((xpixel, ypixel))
-        for i in range(ypixel):
-            line = lines[i].strip().split(",")
-            for j in range(xpixel):
-                data[i,j] = float(line[j])
-        plt.clf()
-        cmap = get_cmap('jet')
-        plt.imshow(data, interpolation="nearest", cmap=cmap)
-        plt.axis('off')
-        cb = plt.colorbar()
-        cb.set_label('Temp (in C)  ')
-        if not path.exists(gallery_folder + filename):
-            plt.savefig(gallery_folder + filename.replace(db_ext, ".png"))
-        plt.show()
+        ypixel = len(lines)
+        if ypixel != 0:
+            xpixel = len(lines[0].split(","))
+            if xpixel != 0:
+                data = np.zeros((xpixel, ypixel))
+                for i in range(ypixel):
+                    line = lines[i].strip().split(",")
+                    for j in range(xpixel):
+                        data[i,j] = float(line[j])
+                plt.clf()
+                cmap = get_cmap('jet')
+                plt.imshow(data, interpolation="nearest", cmap=cmap)
+                plt.axis('off')
+                cb = plt.colorbar()
+                cb.set_label('Temp (in C)  ')
+                if not path.exists(gallery_folder + filename):
+                    plt.savefig(gallery_folder + filename.replace(db_ext, ".png"))
+                plt.show()
 
 win = GUI()
 win.connect("delete-event", Gtk.main_quit)
