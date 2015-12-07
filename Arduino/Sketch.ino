@@ -17,19 +17,20 @@ void setup(){
 }
 
 void loop(){
-  for(byte yi = 0; yi < resolutionY; yi++) {
-    Serial.print(mlx.readObjectTempC());
-    short int direction = -1*pow(-1, yi%2);
-    for(byte xi = 0, xi < resolutionX; xi++){
-      servoX.write((byte)(-0.5)*resolutionX*direction + direction*xi + 0.5*(direction - 1) + 90);
-      delay(20);
+  if (Serial.available() > 0) {
+    for(byte yi = 0; yi < resolutionY; yi++) {
       Serial.print(mlx.readObjectTempC());
+      short int direction = -1*pow(-1, yi%2);
+      for(byte xi = 0, xi < resolutionX; xi++){
+        servoX.write((byte)(-0.5)*resolutionX*direction + direction*xi + 0.5*(direction - 1) + 90);
+        delay(20);
+        Serial.print(mlx.readObjectTempC());
+      }
+      servoY.write((byte)0.5*resolutionY - yi + 90);
+      delay(20);
     }
-    servoY.write((byte)0.5*resolutionY - yi + 90);
-    delay(20);
+    servoX.write(90);
+    servoY.write(90);
+    exit(0);
   }
-  servoX.write(90);
-  servoY.write(90);
-  exit(0);
 }
-
