@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from gi import require_version
 from os import path, makedirs
 from platform import system
@@ -10,6 +11,7 @@ import webbrowser
 from pylab import get_cmap
 import matplotlib.pyplot as plt
 import numpy as np
+import threading
 
 require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
@@ -47,40 +49,48 @@ def open_folder(folder):
         else:
             Popen(["xdg-open", folder])
 
-class GUI(Gtk.Window):
+class GUI(Gtk.Application):
 
     def __init__(self):
-        Gtk.Window.__init__(self, Gtk.WindowType.TOPLEVEL)
-        self.set_title("Camera thermique GUI")
-        self.set_default_size(300,150)
-        self.resize(300,150)
-        self.set_icon_from_file('./images/logo.jpeg')
-        self.set_border_width(10)
-        self.set_resizable(False)
-        self.set_position(Gtk.WindowPosition.CENTER)
+        Gtk.Application.__init__(self)
+        self.connect("activate", self.on_activate)
+
+
+    def on_activate(self, app):
+        self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL, application=self)
+        self.window.set_title("Camera thermique GUI")
+        self.window.set_default_size(300,150)
+        self.window.resize(300,150)
+        self.window.set_icon_from_file('./images/logo.jpeg')
+        self.window.set_resizable(False)
+        self.window.set_position(Gtk.WindowPosition.CENTER)
         vbox = Gtk.VBox(spacing=10)
         hbox1 = Gtk.HBox(spacing=10)
-        hbox2 = Gtk.HBox(spacing=50)
+        hbox2 = Gtk.HBox(spacing=10)
         # Actions Handler
         mb = Gtk.MenuBar()
         filemenu = Gtk.Menu()
         helpmenu = Gtk.Menu()
+        openmenu = Gtk.Menu()
         filem = Gtk.MenuItem("File")
         filem.set_submenu(filemenu)
         helpm = Gtk.MenuItem("Help")
         helpm.set_submenu(helpmenu)
+        openfolder = Gtk.MenuItem("Open")
 
-        open_gallery = Gtk.MenuItem("Open Gallery Folder")
+        open_gallery = Gtk.MenuItem("Gallery")
         open_gallery.connect("activate", self.open_gallery)
-        open_database = Gtk.MenuItem("Open Database Folder")
+        open_database = Gtk.MenuItem("Database")
         open_database.connect("activate", self.open_database)
-        open_db_file = Gtk.MenuItem("Open a database file")
+        open_db_file = Gtk.MenuItem("Database file")
         open_db_file.connect("activate", self.open_db_file)
         exit = Gtk.MenuItem("Exit")
-        exit.connect("activate", Gtk.main_quit)
-        filemenu.append(open_gallery)
-        filemenu.append(open_database)
-        filemenu.append(open_db_file)
+        exit.connect("activate", self.quit_application)
+        openmenu.append(open_gallery)
+        openmenu.append(open_database)
+        openmenu.append(open_db_file)
+        openfolder.set_submenu(openmenu)
+        filemenu.append(openfolder)
         filemenu.append(exit)
 
         open_blog = Gtk.MenuItem("Our Blog")
@@ -94,53 +104,53 @@ class GUI(Gtk.Window):
         helpmenu.append(about_menu)
         mb.append(filem)
         mb.append(helpm)
+        vbox.pack_start(mb, False, False ,0)
 
         # Ports handler
         ports_label = Gtk.Label()
         ports_label.set_text("Port : ")
         ports_label.set_justify(Gtk.Justification.LEFT)
-        self.ports = Gtk.ListStore(str)
+        ports = Gtk.ListStore(str)
         for port in serial.tools.list_ports.comports():
-            self.ports.append([port[0]])
-        self.ports_combo = Gtk.ComboBox.new_with_model(self.ports)
-        self.ports_combo.connect("changed", self.on_port_changed)
+            ports.append([port[0]])
+        self.window.ports_combo = Gtk.ComboBox.new_with_model(ports)
+        self.window.ports_combo.connect("changed", self.on_port_changed)
         renderer_text = Gtk.CellRendererText()
-        self.ports_combo.pack_start(renderer_text, True)
-        self.ports_combo.add_attribute(renderer_text, "text", 0)
-        self.ports_combo.set_active(0)
+        self.window.ports_combo.pack_start(renderer_text, True)
+        self.window.ports_combo.add_attribute(renderer_text, "text", 0)
+        self.window.ports_combo.set_active(0)
         hbox1.pack_start(ports_label, False, False, 0)
-        hbox1.pack_start(self.ports_combo, False, False, 0)
+        hbox1.pack_start(self.window.ports_combo, False, False, 0)
         #Refresh button Handler
-        self.eventbox = Gtk.EventBox()
-        self.refresh_button = Gtk.Image()
-        self.refresh_button.set_from_file("./images/refresh.png")
-        self.eventbox.add(self.refresh_button)
-        self.eventbox.connect("button-press-event", self.refresh_ports)
-        hbox1.pack_start(self.eventbox, True, True, 0)
+        self.window.eventbox = Gtk.EventBox()
+        self.window.refresh_button = Gtk.Image()
+        self.window.refresh_button.set_from_file("./images/refresh.png")
+        self.window.eventbox.add(self.window.refresh_button)
+        self.window.eventbox.connect("button-press-event", self.refresh_ports)
+        hbox1.pack_start(self.window.eventbox, True, True, 0)
         # Connect Button Handler
-        self.connect_button = Gtk.Button.new_with_mnemonic("Connect")
-        self.connect_button.connect("clicked", self.on_connect_clicked)
-        hbox1.pack_start(self.connect_button, True, True, 0)
+        self.window.connect_button = Gtk.Button.new_with_mnemonic("Connect")
+        self.window.connect_button.connect("clicked", self.on_connect_clicked)
+        hbox1.pack_start(self.window.connect_button, True, True, 0)
         #Message Label
-        self.label = Gtk.Label()
-        self.label.set_justify(Gtk.Justification.CENTER)
-        self.label.set_no_show_all(True)
+        self.window.label = Gtk.Label()
+        self.window.label.set_justify(Gtk.Justification.CENTER)
+        self.window.label.set_no_show_all(True)
         #Progress bar
-        self.start_button = Gtk.Button.new_with_mnemonic("Start")
-        self.start_button.connect("clicked", self.start_capturing)
-        self.start_button.set_no_show_all(True)
-        self.progressbar = Gtk.ProgressBar()
-        self.progressbar.set_show_text(True)
-        self.progressbar.set_fraction(0.0)
-        self.progressbar.set_no_show_all(True)
-        hbox2.pack_start(self.start_button, False, False, 0)
-        hbox2.pack_start(self.progressbar, False, False, 0)
+        self.window.start_button = Gtk.Button.new_with_mnemonic("Start")
+        self.window.start_button.connect("clicked", self.start_capturing)
+        self.window.start_button.set_no_show_all(True)
+        self.window.spinner = Gtk.Spinner()
+        self.window.spinner.set_no_show_all(True)
+        hbox2.pack_start(self.window.start_button, False, False, 0)
+        hbox2.pack_start(self.window.spinner, False, False, 0)
         #Save & show image
-        vbox.pack_start(mb, False, False ,0)
-        vbox.pack_start(hbox1, False, False, 0)
-        vbox.pack_start(self.label, False, False, 0 )
+        vbox.pack_start(hbox1, False, False, 5)
+        vbox.pack_start(self.window.label, False, False, 0 )
         vbox.pack_start(hbox2, False, False, 0)
-        self.add(vbox)
+        self.window.add(vbox)
+        self.window.show_all()
+        self.add_window(self.window)
 
     def on_port_changed(self, combo):
         """
@@ -154,38 +164,38 @@ class GUI(Gtk.Window):
 
     def refresh_ports(self , eventbox, button):
         """
-            Update ports lists (Combolist)
+            Update ports lists
         """
-        if self.ports_combo.get_sensitive():
-            self.ports = Gtk.ListStore(str)
+        if self.window.ports_combo.get_sensitive():
+            ports = Gtk.ListStore(str)
             for port in serial.tools.list_ports.comports():
-                self.ports.append([port[0]])
-            self.ports_combo.set_model(self.ports)
-            self.ports_combo.set_active(0)
-            
+                ports.append([port[0]])
+            self.window.ports_combo.set_model(ports)
+            self.window.ports_combo.set_active(0)
+
     def on_connect_clicked(self, button):
         """
             Connect button clicked event handler
         """
         global baud_rate , timeout
-        self.label.set_text("Connecting..")
-        self.refresh_button.set_sensitive(True)
-        self.label.show()
-        self.connect_button.set_sensitive(False)
-        self.ports_combo.set_sensitive(False)
+        self.window.label.set_text("Connecting..")
+        self.window.refresh_button.set_sensitive(True)
+        self.window.label.show()
+        self.window.connect_button.set_sensitive(False)
+        self.window.ports_combo.set_sensitive(False)
         if self.port:
             try :
                 self.arduino = serial.Serial(self.port, baud_rate, timeout=timeout)
                 if self.arduino.isOpen():
-                    self.label.hide()
-                    self.connect_button.set_label("Disconnect")
-                    self.connect_button.connect("clicked", self.on_disconnect_clicked)
-                    self.connect_button.set_sensitive(True)
-                    self.start_button.show()
+                    self.window.label.hide()
+                    self.window.connect_button.set_label("Disconnect")
+                    self.window.connect_button.connect("clicked", self.on_disconnect_clicked)
+                    self.window.connect_button.set_sensitive(True)
+                    self.window.start_button.show()
             except serial.serialutil.SerialException:
-                self.label.set_text("Couldn't Connect, please try another Port")
-                self.connect_button.set_sensitive(True)
-                self.ports_combo.set_sensitive(True)
+                self.window.label.set_text("Could not connect, please try another Port")
+                self.window.connect_button.set_sensitive(True)
+                self.window.ports_combo.set_sensitive(True)
 
     def on_disconnect_clicked(self, button):
         """
@@ -193,44 +203,55 @@ class GUI(Gtk.Window):
         """
         if self.arduino.isOpen():
             self.arduino.close()
-            self.label.set_no_show_all(True)
-            self.label.hide()
-            self.connect_button.set_sensitive(True)
-            self.ports_combo.set_sensitive(True)
-            self.progressbar.hide()
-            self.start_button.hide()
-            self.connect_button.set_label("Connect")
-            self.connect_button.connect("clicked", self.on_connect_clicked)
+            self.window.label.set_no_show_all(True)
+            self.window.label.hide()
+            self.window.connect_button.set_sensitive(True)
+            self.window.ports_combo.set_sensitive(True)
+            self.window.spinner.hide()
+            self.window.start_button.hide()
+            self.window.connect_button.set_label("Connect")
+            self.window.connect_button.connect("clicked", self.on_connect_clicked)
 
-    def start_capturing(self, button):
+    def write_tempratures(self, filename):
+        self.arduino.write("start".encode())
+        f = open(filename ,'w')
+        for i in range(ypixel):
+            for j in range(xpixel):
+                temperature = str(self.arduino.readline()).strip("'")
+                temperature = temperature.replace("b'","")
+                temperature = temperature.replace(r"\r","")
+                temperature = temperature.replace(r"\n","")
+                print(temperature)
+                f.write(str(temperature))
+                if j != xpixel -1:
+                    f.write(",")
+            if i != ypixel -1:
+                f.write("\n")
+        f.close()
+        return True
+
+    def start_capturing(self, widget):
         """"
             Start capturing the thermal image
         """
         global date_format, extension, database_folder
-        self.start_button.set_sensitive(False)
-        self.connect_button.set_sensitive(False)
-        self.progressbar.show()
-        fraction = 0
+        self.window.start_button.set_sensitive(False)
+        self.window.connect_button.set_sensitive(False)
+        self.window.spinner.set_no_show_all(False)
+        self.window.spinner.show()
+        self.window.spinner.start()
         filename = database_folder + "/" + strftime(date_format,gmtime()) + db_ext
-        f = open(filename ,'w')
-        for i in range(ypixel):
-            for j in range(xpixel):
-                temperature = self.arduino.readline()
-                f.write(str(temperature))
-                if j != xpixel:
-                    f.write(",")
-                self.progressbar.set_fraction(float(fraction))
-                fraction += 0.015625
-            if i != ypixel:
-                f.write("\n")
-        f.close()
-        self.progressbar.set_text("100%")
-        self.start_button.set_sensitive(True)
-        self.connect_button.set_sensitive(True)
-        self.show_thermal_image(filename)
+        result = self.write_tempratures(filename)
+        if result:
+            self.window.spinner.stop()
+            self.window.spinner.hide()
+            self.window.start_button.set_sensitive(True)
+            self.window.connect_button.set_sensitive(True)
+            if path.isfile(filename):
+                self.show_thermal_image(filename)
 
     def open_db_file(self, widget):
-        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+        dialog = Gtk.FileChooserDialog("Please choose a file", self.window,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
@@ -242,10 +263,13 @@ class GUI(Gtk.Window):
         if response == Gtk.ResponseType.OK:
             filename = dialog.get_filename()
             dialog.destroy()
-            self.show_thermal_image(filename)
         else:
+            filename = None
             dialog.destroy()
-        
+        if filename:
+            self.show_thermal_image(filename)
+
+
     def open_gallery(self, widget):
         """"
             Open the gallery folder using the default file manager
@@ -255,7 +279,7 @@ class GUI(Gtk.Window):
 
     def open_database(self, widget):
         """
-            Open the databaes folder using the default file manger
+            Open the database folder using the default file manger
         """
         global database_folder
         open_folder(database_folder)
@@ -268,7 +292,7 @@ class GUI(Gtk.Window):
 
     def open_github(self, widget):
         """"
-            Open the github repository in the default web browser
+            Open the Github repository in the default web browser
         """
         webbrowser.open("https://github.com/archaicmuse/TRANH201-5")
 
@@ -277,7 +301,7 @@ class GUI(Gtk.Window):
             Show the about dialog
         """
         dialog = Gtk.AboutDialog()
-        dialog.set_transient_for(self)
+        dialog.set_transient_for(self.window)
         dialog.set_program_name("Thermal Camera GUI")
         dialog.set_website("https://tranh201groupe5.wordpress.com")
         dialog.set_website_label("Website")
@@ -316,11 +340,19 @@ class GUI(Gtk.Window):
                 plt.axis('off')
                 cb = plt.colorbar()
                 cb.set_label('Temp (in C)  ')
-                if not path.exists(gallery_folder + "/" + path.basename(filename)):
-                    plt.savefig(gallery_folder + "/" + path.basename(filename).replace(db_ext, ".png"))
+                database_file = gallery_folder + "/" + path.basename(filename)
+                if not path.exists(database_file):
+                    plt.savefig(database_file.replace(db_ext ,".png"))
                 plt.show()
 
-win = GUI()
-win.connect("delete-event", Gtk.main_quit)
-win.show_all()
-Gtk.main()
+
+    def quit_application(self, widget):
+        """
+            Close the application window
+        """
+        self.quit()
+
+
+if __name__ == "__main__":
+    app = GUI()
+    app.run(None)
