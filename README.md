@@ -18,7 +18,7 @@ The script will only work if you have those packages installed
     
     * PySerial : `pip3 install pyserial`
    
-      Or download those excutables files : 
+    Or download those excutables files : 
 
       * Numpy : http://sourceforge.net/projects/numpy/files/NumPy/
 
