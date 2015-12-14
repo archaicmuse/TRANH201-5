@@ -24,7 +24,7 @@ The script will only work if you have those packages installed :
 
       * Matplotlib : http://sourceforge.net/projects/matplotlib/files/matplotlib/ 
 
-      * PySerial does not have an executable file compatible with a newer version of Python (as from 14/12/2015).
+      * PySerial does not have an executable file compatible with a newer version of Python (as from Python 3).
 - Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
