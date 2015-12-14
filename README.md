@@ -18,7 +18,7 @@ The script will only work if you have those packages installed
     
     `pip3 install pyserial`
 
-- Ubunut
+- Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
 
