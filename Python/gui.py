@@ -39,10 +39,11 @@ def open_folder(folder):
     """
         Open a folder using the default file manager
     """
+    global is_windows
     if not path.exists(folder) and auto_create_gallery:
         makedirs(folder)
     if path.exists(folder):
-        if system() == "Windows" and self.is_windows:
+        if system() == "Windows" and is_windows:
             startfile(folder)
         elif system() == "Darwin":
             Popen(["open", folder])
@@ -67,6 +68,7 @@ class GUI(Gtk.Application):
         vbox = Gtk.VBox(spacing=10)
         hbox1 = Gtk.HBox(spacing=10)
         hbox2 = Gtk.HBox(spacing=10)
+        self.port = None
         # Actions Handler
         mb = Gtk.MenuBar()
         filemenu = Gtk.Menu()
@@ -111,8 +113,8 @@ class GUI(Gtk.Application):
         ports_label.set_text("Port : ")
         ports_label.set_justify(Gtk.Justification.LEFT)
         ports = Gtk.ListStore(str)
-        for port in serial.tools.list_ports.comports():
-            ports.append([port[0]])
+        for port in self.get_ports():
+            ports.append([port])
         self.window.ports_combo = Gtk.ComboBox.new_with_model(ports)
         self.window.ports_combo.connect("changed", self.on_port_changed)
         renderer_text = Gtk.CellRendererText()
@@ -152,6 +154,15 @@ class GUI(Gtk.Application):
         self.window.show_all()
         self.add_window(self.window)
 
+    def get_ports(self):
+        global is_windows
+        ports = []
+        if is_windows:
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        else:
+            for port in serial.tools.list_ports.comports():
+                ports.append(port[0])
+        return ports
     def on_port_changed(self, combo):
         """
             Update the port value
@@ -168,8 +179,8 @@ class GUI(Gtk.Application):
         """
         if self.window.ports_combo.get_sensitive():
             ports = Gtk.ListStore(str)
-            for port in serial.tools.list_ports.comports():
-                ports.append([port[0]])
+            for port in self.get_ports():
+                ports.append([port])
             self.window.ports_combo.set_model(ports)
             self.window.ports_combo.set_active(0)
 
@@ -178,12 +189,12 @@ class GUI(Gtk.Application):
             Connect button clicked event handler
         """
         global baud_rate , timeout
-        self.window.label.set_text("Connecting..")
-        self.window.refresh_button.set_sensitive(True)
-        self.window.label.show()
-        self.window.connect_button.set_sensitive(False)
-        self.window.ports_combo.set_sensitive(False)
         if self.port:
+            self.window.label.set_text("Connecting..")
+            self.window.refresh_button.set_sensitive(True)
+            self.window.label.show()
+            self.window.connect_button.set_sensitive(False)
+            self.window.ports_combo.set_sensitive(False)
             try :
                 self.arduino = serial.Serial(self.port, baud_rate, timeout=timeout)
                 if self.arduino.isOpen():
@@ -196,6 +207,9 @@ class GUI(Gtk.Application):
                 self.window.label.set_text("Could not connect, please try another Port")
                 self.window.connect_button.set_sensitive(True)
                 self.window.ports_combo.set_sensitive(True)
+        else:
+            self.window.label.show()
+            self.window.label.set_text("Please choose an other usb port")
 
     def on_disconnect_clicked(self, button):
         """
