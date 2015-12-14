@@ -21,7 +21,7 @@ The script will only work if you have those packages installed
    Or download those excutables files : 
     - Numpy : http://sourceforge.net/projects/matplotlib/files/matplotlib/
     - Matplotlib : http://sourceforge.net/projects/matplotlib/files/matplotlib/ 
-    - Pyserial :
+    - PySerial :
 - Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
