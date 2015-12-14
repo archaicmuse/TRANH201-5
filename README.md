@@ -1,6 +1,6 @@
 # TRANH201-5
 ## Python dependecies
-The script will only work if you have those packages installed 
+The script will only work if you have those packages installed :
  - `python3-serial`
  - `python3-matplotlib`
  - `python3-numpy`
@@ -10,7 +10,7 @@ The script will only work if you have those packages installed
 ### How to install 
 - Windows
   * You can download PyGObject from here http://sourceforge.net/projects/pygobjectwin32/
-  * To install PySerial, Matplotlib and Numpy open CMD as an administrateur and write those lines
+  * To install PySerial, Matplotlib and Numpy, open CMD as an administrator and write those lines
   
     * Numpy : `pip3 install numpy`
     
@@ -18,13 +18,13 @@ The script will only work if you have those packages installed
     
     * PySerial : `pip3 install pyserial`
    
-    Or download those excutables files : 
+    Or download those executables files : 
 
       * Numpy : http://sourceforge.net/projects/numpy/files/NumPy/
 
       * Matplotlib : http://sourceforge.net/projects/matplotlib/files/matplotlib/ 
 
-      * PySerial does not have an executable file compatible with a newer version of Python.
+      * PySerial does not have an executable file compatible with a newer version of Python (as from 14/12/2015).
 - Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
@@ -34,5 +34,5 @@ The script will only work if you have those packages installed
  `sudo dnf install python3-matplotlib python3-pyserial python3-numpy`
 
 ## Arduino libraries
-To compile the Arduino sketch you will have to install those libraries
+To compile the Arduino sketch, you will have to install those libraries :
  - `Adafruit-MLX90614` 
