@@ -4,17 +4,19 @@ from os import path, makedirs
 from platform import system
 from subprocess import Popen
 from configparser import ConfigParser
-from serial.tools.list_ports comports
-from serial Serial
+from serial.tools.list_ports import comports
+import serial
 from time import sleep, strftime, gmtime
-import webbrowsre
+import webbrowser
 from pylab import get_cmap
 import matplotlib.pyplot as plt
 import numpy as np
+import csv
 import threading
+import queue
 
 require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, GObject, GLib, Gdk
 try:
     from os import startfile
     is_windows = True
@@ -22,6 +24,7 @@ except ImportError:
     is_windows = False
 
 # configurations
+Gdk.threads_init()
 cnfg = ConfigParser()
 cnfg.read("settings.ini")
 absolute_path = path.split(path.abspath(__file__))[0] + "/"
@@ -50,6 +53,7 @@ def open_folder(folder):
         else:
             Popen(["xdg-open", folder])
 
+
 class GUI(Gtk.Application):
 
     def __init__(self):
@@ -58,6 +62,7 @@ class GUI(Gtk.Application):
 
 
     def on_activate(self, app):
+        self.port = None
         self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL, application=self)
         self.window.set_title("Camera thermique GUI")
         self.window.set_default_size(300,150)
@@ -68,7 +73,6 @@ class GUI(Gtk.Application):
         vbox = Gtk.VBox(spacing=10)
         hbox1 = Gtk.HBox(spacing=10)
         hbox2 = Gtk.HBox(spacing=10)
-        self.port = None
         # Actions Handler
         mb = Gtk.MenuBar()
         filemenu = Gtk.Menu()
@@ -142,10 +146,12 @@ class GUI(Gtk.Application):
         self.window.start_button = Gtk.Button.new_with_mnemonic("Start")
         self.window.start_button.connect("clicked", self.start_capturing)
         self.window.start_button.set_no_show_all(True)
-        self.window.spinner = Gtk.Spinner()
-        self.window.spinner.set_no_show_all(True)
+        self.window.progressbar = Gtk.ProgressBar()
+        self.window.progressbar.set_no_show_all(True)
+        self.window.progressbar.set_show_text(True)
+        self.window.progressbar.set_fraction(0)
         hbox2.pack_start(self.window.start_button, False, False, 0)
-        hbox2.pack_start(self.window.spinner, False, False, 0)
+        hbox2.pack_start(self.window.progressbar, False, False, 0)
         #Save & show image
         vbox.pack_start(hbox1, False, False, 5)
         vbox.pack_start(self.window.label, False, False, 0 )
@@ -163,6 +169,7 @@ class GUI(Gtk.Application):
             for port in comports():
                 ports.append(port[0])
         return ports
+
     def on_port_changed(self, combo):
         """
             Update the port value
@@ -189,27 +196,26 @@ class GUI(Gtk.Application):
             Connect button clicked event handler
         """
         global baud_rate , timeout
+        self.window.label.set_text("Connecting..")
+        self.window.refresh_button.set_sensitive(True)
+        self.window.label.show()
+        self.window.connect_button.set_sensitive(False)
+        self.window.ports_combo.set_sensitive(False)
         if self.port:
-            self.window.label.set_text("Connecting..")
-            self.window.refresh_button.set_sensitive(True)
-            self.window.label.show()
-            self.window.connect_button.set_sensitive(False)
-            self.window.ports_combo.set_sensitive(False)
             try :
-                self.arduino = Serial(self.port, baud_rate, timeout=timeout)
+                self.arduino = serial.Serial(self.port, baud_rate, timeout=timeout)
                 if self.arduino.isOpen():
                     self.window.label.hide()
                     self.window.connect_button.set_label("Disconnect")
                     self.window.connect_button.connect("clicked", self.on_disconnect_clicked)
                     self.window.connect_button.set_sensitive(True)
                     self.window.start_button.show()
-            except serialutil.SerialException:
+            except serial.serialutil.SerialException:
                 self.window.label.set_text("Could not connect, please try another Port")
                 self.window.connect_button.set_sensitive(True)
                 self.window.ports_combo.set_sensitive(True)
         else:
-            self.window.label.show()
-            self.window.label.set_text("Please choose an other usb port")
+            self.window.label.set_text("Please choose a port.")
 
     def on_disconnect_clicked(self, button):
         """
@@ -221,46 +227,70 @@ class GUI(Gtk.Application):
             self.window.label.hide()
             self.window.connect_button.set_sensitive(True)
             self.window.ports_combo.set_sensitive(True)
-            self.window.spinner.hide()
+            self.window.progressbar.hide()
             self.window.start_button.hide()
             self.window.connect_button.set_label("Connect")
             self.window.connect_button.connect("clicked", self.on_connect_clicked)
 
-    def write_tempratures(self, filename):
-        self.arduino.write("start".encode())
-        f = open(filename ,'w')
-        for i in range(ypixel):
-            for j in range(xpixel):
-                temperature = str(self.arduino.readline()).strip("'")
+    def get_temperatures(self):
+        self.temperatures = []
+        for i in range(1, ypixel + 1):
+            line = []
+            for j in range(1, xpixel + 1):
+                temperature = str(self.arduino.readline())
                 temperature = temperature.replace("b'","")
                 temperature = temperature.replace(r"\r","")
-                temperature = temperature.replace(r"\n","")
-                print(temperature)
-                f.write(str(temperature))
-                if j != xpixel -1:
-                    f.write(",")
-            if i != ypixel -1:
-                f.write("\n")
-        f.close()
-        return True
+                if (i-1)%2 == 0:
+                    line.append(temperature)
+                else:
+                    line.insert(0, temperature)
+                self.xpixel = j
+            self.ypixel = i
+            self.temperatures.append(line)
 
     def start_capturing(self, widget):
         """"
             Start capturing the thermal image
         """
-        global date_format, extension, database_folder
+        global date_format, extension, database_folder,\
+                xpixel, ypixel
+        filename = database_folder + "/" + strftime(date_format,gmtime()) + db_ext
         self.window.start_button.set_sensitive(False)
         self.window.connect_button.set_sensitive(False)
-        self.window.spinner.set_no_show_all(False)
-        self.window.spinner.show()
-        self.window.spinner.start()
-        filename = database_folder + "/" + strftime(date_format,gmtime()) + db_ext
-        result = self.write_tempratures(filename)
-        if result:
-            self.window.spinner.stop()
-            self.window.spinner.hide()
+        self.window.progressbar.set_no_show_all(False)
+        self.window.progressbar.show()
+        self.temperatures = []
+        self.xpixel, self.ypixel = 1, 1
+        self.arduino.write("start".encode())
+        self.thread = threading.Thread(target = self.get_temperatures)
+        GObject.timeout_add_seconds(5, self.write_tempertaures, [filename])
+        GObject.timeout_add_seconds(0.5, self.update_progressbar)
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def update_progressbar(self):
+        global xpixel, ypixel
+        fraction = self.window.progressbar.get_fraction()
+        if fraction != 1:
+            new_value = ((self.ypixel-1)*xpixel + self.xpixel)/(xpixel*ypixel)
+            self.window.progressbar.set_fraction(new_value)
+            self.window.progressbar.set_text(str(int(new_value*100)) + "%")
+            return True
+        else:
+            self.thread._stop()
+            self.window.progressbar.set_text("100%")
+            self.window.progressbar.set_fraction(1)
+            self.window.progressbar.hide()
             self.window.start_button.set_sensitive(True)
             self.window.connect_button.set_sensitive(True)
+            return False
+
+    def write_tempertaures(self, filename):
+        global xpixel, ypixel
+        if not self.thread.is_alive():
+            with open(filename, "wb") as f:
+                writer = csv.writer(f)
+                writer.writerows(self.temperatures)
             if path.isfile(filename):
                 self.show_thermal_image(filename)
 
@@ -274,15 +304,12 @@ class GUI(Gtk.Application):
         filter.add_pattern("*.csv")
         dialog.add_filter(filter)
         response = dialog.run()
+        filename = None
         if response == Gtk.ResponseType.OK:
             filename = dialog.get_filename()
-            dialog.destroy()
-        else:
-            filename = None
-            dialog.destroy()
+        dialog.destroy()
         if filename:
-            self.show_thermal_image(filename)
-
+            threading.Timer(1, self.show_thermal_image(filename))
 
     def open_gallery(self, widget):
         """"
