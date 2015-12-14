@@ -14,10 +14,14 @@ The script will only work if you have those packages installed
   
     `pip3 install numpy`
     
-    `pip3 install matplotlib`
+    `pip3 install matplotlib` 
     
     `pip3 install pyserial`
-
+   
+   Or download those excutables files : 
+    - Numpy : http://sourceforge.net/projects/matplotlib/files/matplotlib/
+    - Matplotlib : http://sourceforge.net/projects/matplotlib/files/matplotlib/ 
+    - Pyserial :
 - Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
