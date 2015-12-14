@@ -12,11 +12,11 @@ The script will only work if you have those packages installed
   * You can download PyGObject from here http://sourceforge.net/projects/pygobjectwin32/
   * To install PySerial, Matplotlib and Numpy open CMD as an administrateur and write those lines
   
-    `pip3 install numpy`
+    * Numpy : `pip3 install numpy`
     
-    `pip3 install matplotlib` 
+    * Matplotlib : `pip3 install matplotlib` 
     
-    `pip3 install pyserial`
+    * PySerial : `pip3 install pyserial`
    
       Or download those excutables files : 
 
