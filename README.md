@@ -10,7 +10,7 @@ The script will only work if you have those packages installed :
 ### How to install 
 - Windows
   * You can download PyGObject from here http://sourceforge.net/projects/pygobjectwin32/
-  * To install PySerial, Matplotlib and Numpy, open CMD as an administrator and write those lines
+  * To install PySerial, Matplotlib and Numpy, open CMD as an administrator and write those lines :
   
     * Numpy : `pip3 install numpy`
     
