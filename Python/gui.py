@@ -4,10 +4,10 @@ from os import path, makedirs
 from platform import system
 from subprocess import Popen
 from configparser import ConfigParser
-import serial.tools.list_ports
-import serial
+from serial.tools.list_ports comports
+from serial Serial
 from time import sleep, strftime, gmtime
-import webbrowser
+import webbrowsre
 from pylab import get_cmap
 import matplotlib.pyplot as plt
 import numpy as np
@@ -160,7 +160,7 @@ class GUI(Gtk.Application):
         if is_windows:
             ports = ['COM%s' % (i + 1) for i in range(256)]
         else:
-            for port in serial.tools.list_ports.comports():
+            for port in comports():
                 ports.append(port[0])
         return ports
     def on_port_changed(self, combo):
@@ -196,14 +196,14 @@ class GUI(Gtk.Application):
             self.window.connect_button.set_sensitive(False)
             self.window.ports_combo.set_sensitive(False)
             try :
-                self.arduino = serial.Serial(self.port, baud_rate, timeout=timeout)
+                self.arduino = Serial(self.port, baud_rate, timeout=timeout)
                 if self.arduino.isOpen():
                     self.window.label.hide()
                     self.window.connect_button.set_label("Disconnect")
                     self.window.connect_button.connect("clicked", self.on_disconnect_clicked)
                     self.window.connect_button.set_sensitive(True)
                     self.window.start_button.show()
-            except serial.serialutil.SerialException:
+            except serialutil.SerialException:
                 self.window.label.set_text("Could not connect, please try another Port")
                 self.window.connect_button.set_sensitive(True)
                 self.window.ports_combo.set_sensitive(True)
