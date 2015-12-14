@@ -19,9 +19,9 @@ The script will only work if you have those packages installed
     `pip3 install pyserial`
    
    Or download those excutables files : 
-    - Numpy : http://sourceforge.net/projects/matplotlib/files/matplotlib/
+    - Numpy : http://sourceforge.net/projects/numpy/files/NumPy/
     - Matplotlib : http://sourceforge.net/projects/matplotlib/files/matplotlib/ 
-    - PySerial :
+    - PySerial : PySerial does not have an executable file compatible with a newer version of Python.
 - Debian
 
  `sudo apt-get install python3-matplotlib python3-pyserial python3-numpy`
