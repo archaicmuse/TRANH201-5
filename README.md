@@ -3,7 +3,6 @@
 ## Screenshots
 <p align="center">
   <img src="Screenshots/gui_working.png" />
-  <img src="Screenshots/gui.png" />
 </p>
 
 
