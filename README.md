@@ -62,14 +62,35 @@ To compile the Arduino sketch, you will have to install those libraries :
 
 
 ### Using the GUI
+
   1. Clone the repository 
+
     ```bash 
       git clone https://github.com/archaicmuse/TRANH201-5.git
     ```
+
   2. Open the GUI using
+
     ```bash
       python3 ui.py
     ```
+
   Or double click on the file if you're using Windows
+
 ### Change the settings
 
+Open `settings.ini` using your default text editor
+
+- Database
+  * `extension` : The extension file name
+  * `folder` : Database folder name 
+- Gallery 
+  * `folder` : Gallery folder name 
+  * `auto_create_gallery` (Boolean 1 or 0) 
+  * `units` : Temperature unit (K, C, F)
+- Arduino 
+  * `xpixel` (Integer) : Image resolution
+  * `ypixel` (Integer) :  Image resolution
+  * `timeout` 
+  * `baud_rate` (Integer) Speed for transmission bettween your Arduino board and your computer
+  
