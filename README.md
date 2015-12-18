@@ -57,3 +57,19 @@ To compile the Arduino sketch, you will have to install those libraries :
   
 
 ## How to use ?
+### Building a prototype
+
+
+
+### Using the GUI
+  1. Clone the repository 
+    ```bash 
+      git clone https://github.com/archaicmuse/TRANH201-5.git
+    ```
+  2. Open the GUI using
+    ```bash
+      python3 ui.py
+    ```
+  Or double click on the file if you're using Windows
+### Change the settings
+
