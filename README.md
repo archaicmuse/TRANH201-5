@@ -52,5 +52,8 @@ To compile the Arduino sketch, you will have to install those libraries :
   You can install Arduino Librairies using Arduino IDE (available from 1.6.2)
   1. Open Arduino IDE
   2. Click on Sketch -> Include Library -> Manage librairies
-  3. Search for `Adafruit-MLX90614` and click on install button
+  3. Search for `Adafruit-MLX90614` 
+  4. Click on install button
+  
+
 ## How to use ?
