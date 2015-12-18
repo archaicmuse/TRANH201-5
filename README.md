@@ -1,11 +1,11 @@
 # TRANH201-5
 
 ## Screenshots
-
-![First start](Screenshots/gui.png)
-
-![Working](Screenshots/gui_working.png)
-
+<p align="center">
+  <img src="Screenshots/gui.png" />
+  <br />
+  <img src="Screenshots/gui_working.png" />
+</p>
 
 
 ## Python dependecies
