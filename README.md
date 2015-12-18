@@ -2,7 +2,9 @@
 
 ## Screenshots
 
-![First start](Screenshots/gui.png) ![Working](Screenshots/gui_working.png)
+![First start](Screenshots/gui.png)
+
+![Working](Screenshots/gui_working.png)
 
 
 
