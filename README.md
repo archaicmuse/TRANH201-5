@@ -48,4 +48,4 @@ To compile the Arduino sketch, you will have to install those libraries :
  `sudo dnf install python3-matplotlib python3-pyserial python3-numpy`
 
 
-### How to use ?
+## How to use ?
