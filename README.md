@@ -1,4 +1,11 @@
 # TRANH201-5
+
+## Screenshots
+
+![First start](Screenshots/gui.png) ![Working](Screenshots/gui_working.png)
+
+
+
 ## Python dependecies
 The script will only work if you have those packages installed :
  - `python3-serial`
@@ -6,7 +13,12 @@ The script will only work if you have those packages installed :
  - `python3-numpy`
  - GTK3+ (PyGObject)
  
- 
+
+## Arduino libraries
+To compile the Arduino sketch, you will have to install those libraries :
+ - `Adafruit-MLX90614` 
+
+
 ### How to install 
 - Windows
   * You can download PyGObject from here http://sourceforge.net/projects/pygobjectwin32/
@@ -33,6 +45,5 @@ The script will only work if you have those packages installed :
 
  `sudo dnf install python3-matplotlib python3-pyserial python3-numpy`
 
-## Arduino libraries
-To compile the Arduino sketch, you will have to install those libraries :
- - `Adafruit-MLX90614` 
+
+### How to use ?
