@@ -92,5 +92,5 @@ Open `settings.ini` using your default text editor
   * `xpixel` (Integer) : Image resolution
   * `ypixel` (Integer) :  Image resolution
   * `timeout` 
-  * `baud_rate` (Integer) Speed for transmission bettween your Arduino board and your computer
+  * `baud_rate` (Integer) Speed of transmission bettween your Arduino board and your computer
   
