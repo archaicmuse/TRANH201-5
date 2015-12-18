@@ -7,7 +7,6 @@ from configparser import ConfigParser
 from serial.tools.list_ports import comports
 import serial
 from time import sleep, strftime, gmtime
-import webbrowser
 from pylab import get_cmap
 import matplotlib.pyplot as plt
 import numpy as np
@@ -115,15 +114,9 @@ class GUI(Gtk.Application):
         openfolder.set_submenu(openmenu)
         filemenu.append(openfolder)
         filemenu.append(exit)
-
-        open_blog = Gtk.MenuItem("Our Blog")
-        open_blog.connect("activate", self.open_blog)
-        open_github = Gtk.MenuItem("Our Github repository")
-        open_github.connect("activate", self.open_github)
+        
         about_menu = Gtk.MenuItem("About")
         about_menu.connect("activate", self.show_about)
-        helpmenu.append(open_blog)
-        helpmenu.append(open_github)
         helpmenu.append(about_menu)
         mb.append(filem)
         mb.append(helpm)
@@ -333,18 +326,6 @@ class GUI(Gtk.Application):
         global database_folder
         open_folder(database_folder)
 
-    def open_blog(self, widget):
-        """
-            Open the blog in the default web browser
-        """
-        webbrowser.open("https://tranh201groupe5.wordpress.com/")
-
-    def open_github(self, widget):
-        """"
-            Open the Github repository in the default web browser
-        """
-        webbrowser.open("https://github.com/archaicmuse/TRANH201-5")
-
     def show_about(self, widget):
         """
             Show the about dialog
@@ -352,8 +333,8 @@ class GUI(Gtk.Application):
         dialog = Gtk.AboutDialog()
         dialog.set_transient_for(self.window)
         dialog.set_program_name("Thermal Camera GUI")
-        dialog.set_website("https://tranh201groupe5.wordpress.com")
-        dialog.set_website_label("Website")
+        dialog.set_website("https://github.com/archaicmuse/TRANH201-5")
+        dialog.set_website_label("Github repository")
         logo = GdkPixbuf.Pixbuf.new_from_file("./images/logo.jpeg")
         dialog.set_logo(logo)
         dialog.set_name('Thermal Camera GUI')
