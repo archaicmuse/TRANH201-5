@@ -86,7 +86,6 @@ Open `settings.ini` using your default text editor
   * `folder` : Database folder name 
 - Gallery 
   * `folder` : Gallery folder name 
-  * `auto_create_gallery` (Boolean 1 or 0) 
   * `units` : Temperature unit (K, C, F)
 - Arduino 
   * `xpixel` (Integer) : Image resolution
