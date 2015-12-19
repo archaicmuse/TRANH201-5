@@ -31,7 +31,6 @@ database_folder = absolute_path + cnfg.get("database","folder")
 gallery_folder = absolute_path + cnfg.get("gallery","folder")
 db_ext = "." + cnfg.get("database","extension")
 date_format = "%d-%m-%Y_%H-%M-%S"
-auto_create_gallery = bool(cnfg.get("gallery","auto_create_gallery"))
 baud_rate = int(cnfg.get("arduino","baud_rate"))
 timeout = float(cnfg.get("arduino","timeout"))
 xpixel = int(cnfg.get("arduino","xpixel"))
@@ -43,7 +42,7 @@ def open_folder(folder):
         Open a folder using the default file manager
     """
     global is_windows
-    if not path.exists(folder) and auto_create_gallery:
+    if not path.exists(folder):
         makedirs(folder)
     if path.exists(folder):
         if system() == "Windows" and is_windows:
