@@ -253,14 +253,15 @@ class GUI(Gtk.Application):
             self.window.connect_button.set_label("Connect")
             self.window.connect_button.connect("clicked", self.on_connect_clicked)
 
-    def get_temperatures(self, filename):
-        f = open(filename, "w")
+    def get_temperatures(self):
+        f = open(self.filename, "w")
         cwriter = writer(f, delimiter=",")
         for i in range(1, ypixel + 1):
             line = []
             for j in range(1, xpixel + 1):
-                temperature = findall("\d+\.\d+", str(self.arduino.readline().strip()))
-                temperature = float(temperature[0]) if len(temperature) > 0 else 0.0
+                temperature = self.arduino.readline().strip().decode()
+                temperature = float(temperature) if temperature else 0.0
+                print(temperature)
                 if (i-1)%2 == 0:
                     line.append(temperature)
                 else:
@@ -270,16 +271,15 @@ class GUI(Gtk.Application):
             if len(line) == xpixel:
                 cwriter.writerow(line)
         f.close()
-        self.show_thermal_image(filename)
         return False
-
+        
     def start_capturing(self, widget):
         """"
             Start capturing the thermal image
         """
         global date_format, extension, database_folder,\
                 xpixel, ypixel
-        filename = database_folder + "/" + strftime(date_format, gmtime()) + db_ext
+        self.filename = database_folder + "/" + strftime(date_format, gmtime()) + db_ext
         self.window.start_button.set_sensitive(False)
         self.window.connect_button.set_sensitive(False)
         self.window.progressbar.set_no_show_all(False)
@@ -287,9 +287,10 @@ class GUI(Gtk.Application):
         self.xpixel, self.ypixel = 0, 0
         self.arduino.write("start".encode())
         GObject.timeout_add_seconds(1, self.update_progressbar)
-        self.thread = Thread(target=self.get_temperatures, args=(filename, ))
+        self.thread = Thread(target=self.get_temperatures)
         self.thread.setDaemon(True)
         self.thread.start()
+
 
     def update_progressbar(self):
         global xpixel, ypixel
@@ -299,6 +300,14 @@ class GUI(Gtk.Application):
             self.window.progressbar.set_fraction(new_value)
             self.window.progressbar.set_text(str(int(new_value*100)) + "%")
             return True
+        else:
+            self.window.progressbar.set_fraction(0)
+            self.window.progressbar.set_text(str("0%"))
+            self.window.progressbar.hide()
+            self.window.start_button.set_sensitive(True)
+            self.window.connect_button.set_sensitive(True)
+            
+            return False
 
     def open_db_file(self, widget):
         dialog = Gtk.FileChooserDialog("Please choose a file", self.window,
