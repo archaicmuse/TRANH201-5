@@ -1,0 +1,2 @@
+# Dependecies
+- i2cmaster
