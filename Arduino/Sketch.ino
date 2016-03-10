@@ -6,7 +6,7 @@
 
 byte resolutionX = 80;
 byte resolutionY = 80;
-byte xTop = 90 - resolutionX/2;
+byte xTop = 90 + resolutionX/2;
 byte yTop = 90 + resolutionY/2;
 String Line;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
@@ -31,29 +31,14 @@ void loop(){
             data = SD.open("data.csv", FILE_WRITE);
         }
         for(byte yi = yTop; yi > yTop - resolutionY; yi--) {
-            short int direction = -1*pow(-1, yi % 2);
-
-            if(direction == 1) {
-                for(byte xi = xTop; xi < xTop + resolutionX; xi++) {
-                    ServoX.write(ServoX.read() + 1);
-                    delay(20);
-                    double temperature = mlx.readObjectTempC();
-                    Serial.println(temperature);
-                    Line.concat(String(temperature));
-                    if (xi != xTop + resolutionX - 1) {
-                        Line.concat(",");
-                    }
-                }
-            } else {
-                for(byte xi = xTop + resolutionX; xi > xTop; xi--) {
-                    ServoX.write(ServoX.read() - 1);
-                    delay(20);
-                    double temperature = mlx.readObjectTempC();
-                    Serial.println(temperature);
-                    Line.concat(String(temperature));
-                    if (xi != xTop + 1) {
-                        Line.concat(",");
-                    }
+            for(byte xi = xTop; xi > xTop - resolutionX; xi--) {
+                ServoX.write(ServoX.read() - 1);
+                delay(20);
+                double temperature = mlx.readObjectTempC();
+                Serial.println(temperature);
+                Line.concat(String(temperature));
+                if (xi != xTop - resolutionX - 1) {
+                    Line.concat(",");
                 }
             }
             if(SD.begin(4)){
@@ -62,6 +47,7 @@ void loop(){
                     Line = "";
                 }
             }
+            ServoX.write(xTop);
             ServoY.write(ServoY.read() - 1);
         }
         if(SD.begin(4)){
