@@ -23,9 +23,11 @@ try:
     is_windows = True
 except ImportError:
     is_windows = False
-
+""" TODO :
+ - > 1000°C
+"""
 # configurations
-Gdk.threads_init()
+GObject.threads_init()
 cnfg = ConfigParser()
 cnfg.read("settings.ini")
 absolute_path = path.split(path.abspath(__file__))[0] + "/"
@@ -39,6 +41,8 @@ xpixel = int(cnfg.get("arduino", "xpixel"))
 ypixel = int(cnfg.get("arduino", "ypixel"))
 unit_temperature = str(cnfg.get("gallery", "units")).upper()
 temperature_units = ["K", "C", "F"]
+
+
 
 def open_folder(folder):
     """
@@ -68,13 +72,15 @@ def convert_temperature(temperature, unit):
     elif unit == "K":
         return temperature + 273.15
     elif unit == "F":
-        return (temperature * 9/5 + 32)
+        return (temperature * 9 / 5 + 32)
 
 
 class GUI(Gtk.Application):
+    data = []
 
-    def __init__(self):
+    def __init__(self, xpixel, ypixel):
         Gtk.Application.__init__(self)
+        self.data = np.zeros((xpixel, ypixel))
         self.connect("activate", self.on_activate)
 
     def on_activate(self, app):
@@ -223,7 +229,7 @@ class GUI(Gtk.Application):
         self.window.connect_button.set_sensitive(False)
         self.window.ports_combo.set_sensitive(False)
         if self.port:
-            try :
+            try:
                 self.arduino = serial.Serial(self.port, baud_rate, timeout=timeout)
                 if self.arduino.isOpen():
                     self.window.label.hide()
@@ -256,29 +262,32 @@ class GUI(Gtk.Application):
     def get_temperatures(self):
         f = open(self.filename, "w")
         cwriter = writer(f, delimiter=",")
+        database_file = gallery_folder + "/" + path.basename(self.filename)
+
         for i in range(1, ypixel + 1):
             line = []
             for j in range(1, xpixel + 1):
                 temperature = self.arduino.readline().strip().decode()
                 temperature = float(temperature) if temperature else 0.0
                 print(temperature)
-                if (i-1)%2 == 0:
-                    line.append(temperature)
-                else:
-                    line.insert(0, temperature)
+                # just for tests!
+                line.append(temperature)
+                self.data[i - 1, j - 1] = convert_temperature(temperature, unit_temperature)
                 self.xpixel = j if j != xpixel else 0
             self.ypixel = i
             if len(line) == xpixel:
                 cwriter.writerow(line)
         f.close()
+        if not path.exists(database_file):
+            plt.savefig(database_file.replace(db_ext, ".png"))
         return False
-        
+
     def start_capturing(self, widget):
         """"
             Start capturing the thermal image
         """
         global date_format, extension, database_folder,\
-                xpixel, ypixel
+            xpixel, ypixel
         self.filename = database_folder + "/" + strftime(date_format, gmtime()) + db_ext
         self.window.start_button.set_sensitive(False)
         self.window.connect_button.set_sensitive(False)
@@ -286,19 +295,34 @@ class GUI(Gtk.Application):
         self.window.progressbar.show()
         self.xpixel, self.ypixel = 0, 0
         self.arduino.write("start".encode())
+        fig = plt.figure()
+        plt.autoscale(True)
+        plt.clf()
+        cmap = get_cmap('jet')
+        self.img = plt.imshow(self.data, interpolation="nearest", cmap=cmap,  aspect='auto')
+        plt.axis('off')
+        self.cb = fig.colorbar(self.img)
+        self.cb.set_label("Temperature (°" + unit_temperature.upper() + ")  ")
+        thread = Thread(target=plt.show)
+        thread.setDaemon(True)
+        thread.start()
         GObject.timeout_add_seconds(1, self.update_progressbar)
         self.thread = Thread(target=self.get_temperatures)
         self.thread.setDaemon(True)
         self.thread.start()
 
-
     def update_progressbar(self):
         global xpixel, ypixel
         fraction = self.window.progressbar.get_fraction()
         if fraction != 1:
-            new_value = ((self.ypixel)*xpixel + self.xpixel)/(xpixel*ypixel)
+            new_value = ((self.ypixel) * xpixel + self.xpixel) / (xpixel * ypixel)
             self.window.progressbar.set_fraction(new_value)
-            self.window.progressbar.set_text(str(int(new_value*100)) + "%")
+            self.window.progressbar.set_text(str(int(new_value * 100)) + "%")
+            self.img.set_data(self.data)
+            self.cb.set_clim(vmax=self.data.max(),vmin=self.data.min())
+            self.img.changed()
+            plt.autoscale()
+            plt.draw()
             return True
         else:
             self.window.progressbar.set_fraction(0)
@@ -306,14 +330,13 @@ class GUI(Gtk.Application):
             self.window.progressbar.hide()
             self.window.start_button.set_sensitive(True)
             self.window.connect_button.set_sensitive(True)
-            
             return False
-
+    
     def open_db_file(self, widget):
         dialog = Gtk.FileChooserDialog("Please choose a file", self.window,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                       Gtk.FileChooserAction.OPEN,
+                                       (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
         filter = Gtk.FileFilter()
         filter.set_name("Database file")
         filter.add_pattern("*.csv")
@@ -325,11 +348,10 @@ class GUI(Gtk.Application):
             self.show_thermal_image(filename)
 
     def choose_folder(self, *args):
-        print("hello")
         dialog = Gtk.FileChooserDialog("Please choose a file", self.window,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                       Gtk.FileChooserAction.OPEN,
+                                       (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
         dialog.set_action(Gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
         response = dialog.run()
         foldername = dialog.get_filename()
@@ -377,36 +399,38 @@ class GUI(Gtk.Application):
 
     def show_thermal_image(self, filename):
         global db_ext, gallery_folder, unit_temperature
-        f = open(filename)
-        lines = f.readlines()
-        f.close()
-        if not self.file_is_empty(filename):
-            ypixel = len(lines)
-            xpixel = len(lines[0].split(","))
-            data = np.zeros((xpixel, ypixel))
-            for i in range(ypixel):
-                line = lines[i].strip().split(",")
-                for j in range(xpixel):
-                    data[i, j] = convert_temperature(float(line[j]), unit_temperature)
-            fig = plt.figure()
-            plt.clf()
-            cmap = get_cmap('jet')
-            plt.imshow(data, interpolation="nearest", cmap=cmap)
-            plt.axis('off')
-            cb = plt.colorbar()
-            cb.set_label("Temperature (°" + unit_temperature.upper() + ")  ")
-    
-            database_file = gallery_folder + "/" + path.basename(filename)
-            if not path.exists(database_file):
-                plt.savefig(database_file.replace(db_ext, ".png"))
-            plt.show()
+        if path.isfile(filename):
+            f = open(filename)
+            lines = f.readlines()
+            f.close()
+            if not self.file_is_empty(filename):
+                ypixel = len(lines)
+                xpixel = len(lines[0].split(","))
+                data = np.zeros((xpixel, ypixel))
+                for i in range(ypixel):
+                    line = lines[i].strip().split(",")
+                    for j in range(xpixel):
+                        data[i, j] = convert_temperature(float(line[j]), unit_temperature)
+                fig = plt.figure()
+                plt.clf()
+                cmap = get_cmap('jet')
+                plt.imshow(data, interpolation="nearest", cmap=cmap)
+                plt.axis('off')
+                cb = plt.colorbar()
+                cb.set_label("Temperature (°" + unit_temperature.upper() + ")  ")
+                plt.show()
+            else:
+                self.show_notification("Please choose an other file", "The file seems to be empty or corrupted")
         else:
-            dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR,
-                Gtk.ButtonsType.OK, "Please choose an other file")
-            dialog.format_secondary_text("The file seems to be empty or corrupted")
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                dialog.destroy()
+            self.show_notification("Please choose an other file", "Please choose a file instead of a folder")
+
+    def show_notification(self, title, message):
+        dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR,
+                                   Gtk.ButtonsType.OK, title)
+        dialog.format_secondary_text(message)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            dialog.destroy()
 
     def open_settings(self, *args):
         cnfg = ConfigParser()
@@ -492,5 +516,5 @@ class GUI(Gtk.Application):
         self.swin.destroy()
 
 if __name__ == "__main__":
-    app = GUI()
+    app = GUI(xpixel, ypixel)
     app.run(None)
