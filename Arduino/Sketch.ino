@@ -34,7 +34,7 @@ void loop(){
             for(byte xi = xTop; xi > xTop - resolutionX; xi--) {
                 ServoX.write(ServoX.read() - 1);
                 delay(20);
-                double temperature = mlx.readObjectTempC();
+                double temperature = 4.5*mlx.readObjectTempC() - 87;
                 Serial.println(temperature);
                 Line.concat(String(temperature));
                 if (xi != xTop - resolutionX - 1) {
